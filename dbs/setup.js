@@ -4,15 +4,23 @@ const{ MongoMemoryServer } = require('mongodb-memory-server');
 
 const connectToMongo = async(envVariables)=>{
   const { ENVIRONMENT, DB_USER, DB_PASS, SERVER_HOST, DB_NAME } = envVariables;
-  let dbInstance
+  let uri
+
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  } 
+
   if(ENVIRONMENT == "test"){
-    dbInstance = await MongoMemoryServer.create();
-    dbInstance.getUri();
-    return dbInstance
-  }else{
-    const uri = `mongodb://${DB_USER}:${DB_PASS}@${SERVER_HOST}/${DB_NAME}`;
-    dbInstance =  await mongoose.connect(uri)
+    const dbInstance = await MongoMemoryServer.create();
+    uri = dbInstance.getUri();
+    /* await mongoose.connect(uri); */
+  } else {
+    uri = `mongodb://${DB_USER}:${DB_PASS}@${SERVER_HOST}/${DB_NAME}`;
+    /* await mongoose.connect(uri) */
   }
+
+  const dbInstance = await mongoose.connect(uri)
+
   return dbInstance
 }
 

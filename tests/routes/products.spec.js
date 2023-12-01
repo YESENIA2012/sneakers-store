@@ -1,6 +1,8 @@
 const app = require("../../app.js");
 const request = require("supertest");
 const expect = require("chai").expect;
+const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const ProductController = require("../../src/controllers/productController.js");
 const productController = new ProductController()
 const PricesController = require("../../src/controllers/pricesController.js");
@@ -10,18 +12,14 @@ const {
   mockedErrorParamsEmpty,
 } = require("../mocks/event.mock.js");
 
-describe("Event test", () => {
-
-  before(async () => {
-
-  });
+describe("Product test", () => {
 
   after(async () => {
-   /*  await eventsController.deleteAllEvents();
-    await usersController.deleteAllUsers(); */
+    await mongoose.disconnect();
   });
 
-it("GET / Should return 200 and an array containing only the products that are currently in stock", async () => {
+it("GET / Should return 200 and an array containing only the products that are currently in stock", 
+async () => {
     const firstRecord = {
       nombre: "Zapatillas formales - adidas",
       id_marca: "649d1816f8253a0a6a5f218e",
@@ -47,12 +45,11 @@ it("GET / Should return 200 and an array containing only the products that are c
     await productController.createProductsForTesting(secondRecord)
     await productController.createProductsForTesting(thirdRecord)
 
-    const response = await request(app).get(`/`)
+    const response = await request(app).get("/products/")
+    const productsInStock = response.body
 
-    console.log("response", response)
     expect(response.status).to.equal(200);
-    expect(response.body).to.be.an("array");
-    expect(events.length).to.be.greaterThan(0)
+    expect(productsInStock).to.be.an("array");
+    expect(productsInStock.length).to.deep.equal(2)
   });
-
 });

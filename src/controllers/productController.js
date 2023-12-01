@@ -9,10 +9,20 @@ class ProductController {
   }
 
   async createProductsForTesting(dataProduct){
-    const Products = await initProductsModel()
-    const product = Products.create(dataProduct)
+    const { nombre, id_marca, precioBase, enStock, } = dataProduct
 
-    return product
+    const dataNewProduct = {
+      nombre, 
+      id_marca, 
+      precioBase, 
+      enStock
+    }
+    
+    const Products = await initProductsModel()
+    const product = new Products(dataNewProduct)
+    const result = await product.save()
+
+    return result
   }
 }
 
