@@ -1,18 +1,25 @@
 const config = require("./config/index.js");
+const mongoose = require('mongoose');
+const{ MongoMemoryServer } = require('mongodb-memory-server');
 
 const connectToMongo = async(envVariables)=>{
-  const {  DB_USER, DB_PASS, SERVER_HOST, DB_NAME } = envVariables;
-
-  const mongoose = require('mongoose');
-  const uri = `mongodb://${DB_USER}:${DB_PASS}@${SERVER_HOST}/${DB_NAME}`;
-
-  const mongod =  await mongoose.connect(uri)
-  return mongod
+  const { ENVIRONMENT, DB_USER, DB_PASS, SERVER_HOST, DB_NAME } = envVariables;
+  let dbInstance
+  if(ENVIRONMENT == "test"){
+    dbInstance = await MongoMemoryServer.create();
+    dbInstance.getUri();
+    return dbInstance
+  }else{
+    const uri = `mongodb://${DB_USER}:${DB_PASS}@${SERVER_HOST}/${DB_NAME}`;
+    dbInstance =  await mongoose.connect(uri)
+  }
+  return dbInstance
 }
 
 const getInstance = async () => {
   try {
     const { ENVIRONMENT } = process.env;
+    console.log("ENVIRONMENT", ENVIRONMENT)
 
     if (!ENVIRONMENT) {
       throw new Error(`Please setup a valid ENVIRONMENT`);
@@ -30,7 +37,7 @@ const getInstance = async () => {
     return instance
 
   } catch (error) {
-    console.log("error connecting to the db..");
+    console.log("error connecting to the db..",error);
     throw error;
   }
 };

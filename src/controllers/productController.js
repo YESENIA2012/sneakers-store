@@ -7,6 +7,13 @@ class ProductController {
 
     return products
   }
+
+  async createProductsForTesting(dataProduct){
+    const Products = await initProductsModel()
+    const product = Products.create(dataProduct)
+
+    return product
+  }
 }
 
 module.exports = ProductController
