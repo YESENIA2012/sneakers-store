@@ -2,28 +2,19 @@ const app = require("../../app.js");
 const request = require("supertest");
 const expect = require("chai").expect;
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 const ProductController = require("../../src/controllers/productController.js");
 const productController = new ProductController()
 const PricesController = require("../../src/controllers/pricesController.js");
 const pricesController = new PricesController()
 
-const {
-  mockedErrorParamsEmpty,
-} = require("../mocks/event.mock.js");
-
 describe("Product test", () => {
+  let dataClient
 
-  after(async () => {
-    await mongoose.disconnect();
-  });
-
-it("GET / Should return 200 and an array containing only the products that are currently in stock", 
-async () => {
+  before(async() => {
     const firstRecord = {
-      nombre: "Zapatillas formales - adidas",
+      nombre: "Nike Air Max 90",
       id_marca: "649d1816f8253a0a6a5f218e",
-      precioBase: 99.98,
+      precioBase: 150.99,
       enStock: true,
     };
 
@@ -45,6 +36,22 @@ async () => {
     await productController.createProductsForTesting(secondRecord)
     await productController.createProductsForTesting(thirdRecord)
 
+    let dataToInsert = {
+      nombre: "Alice Smith", 
+      nombre_producto: "Nike Air Max 90", 
+      precio_especial_personal: 129.99
+    }
+
+    dataClient = await pricesController.createPricesSpecialsList(dataToInsert)
+  })
+
+  after(async () => {
+    await mongoose.disconnect();
+  });
+
+  it("GET / Should return 200 and an array containing only the products that are currently in stock", 
+  async () => {
+
     const response = await request(app).get("/products/")
     const productsInStock = response.body
 
@@ -52,4 +59,31 @@ async () => {
     expect(productsInStock).to.be.an("array");
     expect(productsInStock.length).to.deep.equal(2)
   });
+
+  it("GET / Should return 200 and a special price for a client", async () => {
+    let idClient = dataClient["_id"].toString()
+    let productName = "Nike Air Max 90"
+
+    const response = await request(app)
+    .get(`/price/${idClient}/${productName}`)
+
+    const priceProduct = response.body
+
+    expect(response.status).to.equal(200) ;
+    expect(priceProduct).to.deep.equal({ price: 129.99 })
+  })
+
+  it("GET / Should return 200 and the base price of a product for the client", async () => {
+    let idClient = dataClient["_id"].toString()
+    let productName = "SuperJordan"
+
+    const response = await request(app)
+    .get(`/price/${idClient}/${productName}`)
+
+    const priceProduct = response.body
+
+    expect(response.status).to.equal(200) ;
+    expect(priceProduct).to.deep.equal({ price: 100 })
+  })
+
 });
