@@ -2,12 +2,29 @@ const { initUsersModel } = require("../models/userModel")
 const initProductsModel = require("../models/productModel")
 
 class PricesController {
+
+  throwError(message, status = 500){
+    const error = new Error(`${message}`);
+    error.statusCode = `${status}`;
+    throw error
+  }
+
   async getSpecialPrice(userId, productName) {
     let priceProduct
     const UserModel = await initUsersModel()
+    let productByUser 
 
-    const productFind = await UserModel.findOne({ _id: userId }).lean()
-    const priceList = productFind["metadata"]
+    try {
+      productByUser = await UserModel.findOne({ _id: userId }).lean()
+    } catch (error) {
+      this.throwError("Invalid User Id", 400)
+    }
+
+    if(!productByUser){
+      this.throwError("User not found", 404)
+    }
+
+    const priceList = productByUser["metadata"]
 
     if(priceList){
       const priceListClient = priceList["precios_especiales"]
@@ -25,10 +42,7 @@ class PricesController {
       const product = await Products.findOne({ nombre: productName }).lean();
 
       if(!product){
-        console.log("priceProduct", priceProduct)
-        const error = new Error("Product not found");
-        error.statusCode = 404;
-        throw error
+        this.throwError("Product not found", 404)
       }
 
       priceProduct = product.precioBase
