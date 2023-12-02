@@ -6,7 +6,7 @@ const pricesController = new PricesController()
 //get an event
 priceRouter.get("/:user_id/:product_name", 
 async (req, res, next) => {
-  console.log("req.params", req.params)
+
   const userId = req.params.user_id;
   const productName = req.params.product_name
 
@@ -18,6 +18,5 @@ async (req, res, next) => {
     next(error);
   }
 });
-
 
 module.exports = priceRouter;
