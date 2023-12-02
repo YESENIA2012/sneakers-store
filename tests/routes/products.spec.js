@@ -8,7 +8,7 @@ const PricesController = require("../../src/controllers/pricesController.js");
 const pricesController = new PricesController()
 
 describe("Product test", () => {
-  let dataClient
+  let clientAlice
 
   before(async() => {
     const firstRecord = {
@@ -36,13 +36,13 @@ describe("Product test", () => {
     await productController.createProductsForTesting(secondRecord)
     await productController.createProductsForTesting(thirdRecord)
 
-    let dataToInsert = {
+    const dataAlice = {
       nombre: "Alice Smith", 
       nombre_producto: "Nike Air Max 90", 
       precio_especial_personal: 129.99
     }
 
-    dataClient = await pricesController.createPricesSpecialsList(dataToInsert)
+    clientAlice = await pricesController.createPricesSpecialsListForTesting(dataAlice)
   })
 
   after(async () => {
@@ -61,7 +61,7 @@ describe("Product test", () => {
   });
 
   it("GET / Should return 200 and a special price for a client", async () => {
-    let idClient = dataClient["_id"].toString()
+    let idClient = clientAlice["_id"].toString()
     let productName = "Nike Air Max 90"
 
     const response = await request(app)
@@ -74,7 +74,7 @@ describe("Product test", () => {
   })
 
   it("GET / Should return 200 and the base price of a product for the client", async () => {
-    let idClient = dataClient["_id"].toString()
+    let idClient = clientAlice["_id"].toString()
     let productName = "SuperJordan"
 
     const response = await request(app)
@@ -84,6 +84,50 @@ describe("Product test", () => {
 
     expect(response.status).to.equal(200) ;
     expect(priceProduct).to.deep.equal({ price: 100 })
+  })
+
+  it("GET / Should return 200 and the base price of a product for the client", async () => {
+    const idClient = clientAlice["_id"].toString()
+    const productName = "SuperJordan"
+
+    const response = await request(app)
+    .get(`/price/${idClient}/${productName}`)
+
+    const priceProduct = response.body
+
+    expect(response.status).to.equal(200) ;
+    expect(priceProduct).to.deep.equal({ price: 100 })
+  })
+
+  it("GET / Should return 200 and the base price when metadata property not exist", async () => {
+    const dataHenry = {
+      "nombre" : "Henry Wilson"
+    }
+
+    let clientHenry = await pricesController.createPricesSpecialsListForTesting(dataHenry)
+    let idClient = clientHenry["_id"].toString()
+    let productName = "Zapatillas  formales - pumas"
+
+    const response = await request(app)
+    .get(`/price/${idClient}/${productName}`)
+
+    const priceProduct = response.body
+
+    expect(response.status).to.equal(200) ;
+    expect(priceProduct).to.deep.equal({ price: 99.98 })
+  })
+
+  it("GET / Should return 404 and error if product is not found", async () => {
+    const productName = "New Balance FuelCell Rebel"
+    const idClient = clientAlice["_id"].toString()
+
+    const response = await request(app)
+    .get(`/price/${idClient}/${productName}`)
+
+    const priceProduct = response.body
+
+    expect(response.status).to.equal(404) ;
+    expect(priceProduct).to.deep.equal({ error: "Product not found" })
   })
 
 });
