@@ -1,16 +1,16 @@
-const app = require("../../app.js");
+const { initDbConnectionForTest } = require("../../dbs/setup.js")
 const request = require("supertest");
 const expect = require("chai").expect;
-const mongoose = require('mongoose');
-const TestingController = require("../../src/controllers/testingController.js");
-const testingController = new TestingController()
-
-
 
 describe("Product test", () => {
-  let clientAlice
+  let app, clientAlice, testingController
 
   before(async() => {
+    await initDbConnectionForTest()
+
+    app = require("../../app.js");
+    const TestingController = require("../../src/controllers/testingController.js");
+    testingController = new TestingController()   
 
     const nikeBrand = await testingController.createBrand("Nike")
     const idBrand = nikeBrand["_id"].toString()
@@ -48,10 +48,6 @@ describe("Product test", () => {
 
     clientAlice = await testingController.createPricesSpecials(dataAlice)
   })
-
-  after(async () => {
-    await mongoose.disconnect();
-  });
 
   it("GET /products/ Should return 200 and an array containing only the products that are currently in stock", 
   async () => {
