@@ -3,23 +3,27 @@ const mongoose = require('mongoose');
 const{ MongoMemoryServer } = require('mongodb-memory-server');
 let instance
 
-const connectToMongo = async(envVariables)=>{
+const connectToDb = async (envVariables) =>{
   const { ENVIRONMENT, DB_USER, DB_PASS, SERVER_HOST, DB_NAME } = envVariables;
   let uri
 
-  if(ENVIRONMENT == "test"){
-    const dbInstance = await MongoMemoryServer.create();
-    uri = dbInstance.getUri();
-  } else {
+  if(ENVIRONMENT !== "test"){
     uri = `mongodb://${DB_USER}:${DB_PASS}@${SERVER_HOST}/${DB_NAME}`;
-  }
-
+  } 
   const dbInstance = await mongoose.connect(uri)
 
   return dbInstance
 }
 
-const getInstance = async () => {
+const initDbConnectionForTest = async() => {
+  const dbInstance = await MongoMemoryServer.create()
+  const uri = dbInstance.getUri()
+  instance = mongoose.connect(uri)
+
+  return instance
+}
+
+const initializeConnection = async () => {
   try {
     const { ENVIRONMENT } = process.env;
 
@@ -38,7 +42,7 @@ const getInstance = async () => {
     const dbConfig = config[ENVIRONMENT]
     console.log("initializing a new connection instance ", dbConfig);
     
-    instance = await connectToMongo(process.env)
+    instance = connectToDb(process.env)
 
     return instance
   } catch (error) {
@@ -47,4 +51,4 @@ const getInstance = async () => {
   }
 };
 
-module.exports = { getInstance };
+module.exports = { connectToDb, initializeConnection, initDbConnectionForTest };
