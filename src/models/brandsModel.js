@@ -1,17 +1,10 @@
-const { Schema } = require("mongoose");
-const { getInstance } = require("../../dbs/setup")
+const mongoose = require("mongoose")
+const { Schema } = mongoose;
 
 const modelSchema = new Schema({
   name: String
 })
-  
-async function initBrandsModel(){
-  const mongoose = await getInstance();
-  const model = mongoose.model('brands', modelSchema);
 
-  return model
-}
+const BrandModel = mongoose.model('brands', modelSchema);
 
-
-
-module.exports = initBrandsModel;
+module.exports = BrandModel;
