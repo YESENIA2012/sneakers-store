@@ -1,9 +1,8 @@
-const initProductsModel = require("../models/productModel")
+const ProductModel = require("../models/productModel")
 
 class ProductController {
   async getProducts(){
-    const Products = await initProductsModel()
-    const products = await Products.find({ enStock: true })
+    const products = await ProductModel.find({ enStock: true })
 
     return products
   }

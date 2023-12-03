@@ -1,6 +1,6 @@
-const initProductsModel = require("../models/productModel")
-const { initUsersModel } = require("../models/userModel")
-const initBrandsModel = require("../models/brandsModel")
+const ProductModel = require("../models/productModel")
+const UserModel = require("../models/userModel")
+const BrandModel = require("../models/brandsModel")
 
 class TestingController {
   async createProduct(dataProduct){
@@ -13,8 +13,7 @@ class TestingController {
       enStock
     }
     
-    const Products = await initProductsModel()
-    const product = new Products(dataNewProduct)
+    const product = new ProductModel(dataNewProduct)
     const result = await product.save()
 
     return result
@@ -39,7 +38,6 @@ class TestingController {
       };
     }
 
-    const UserModel = await initUsersModel()
     const specialPricesList = new UserModel(dataClientSpecialProduct)
     const result = await specialPricesList.save()
 
@@ -49,7 +47,6 @@ class TestingController {
   async createBrand(name){
 
     const data = { name }
-    const BrandModel = await initBrandsModel()
     const specialPricesList = new BrandModel(data)
     const result = await specialPricesList.save()
 

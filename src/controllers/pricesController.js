@@ -1,6 +1,6 @@
-const { initUsersModel } = require("../models/userModel")
-const initProductsModel = require("../models/productModel")
-const initBrandsModel = require("../models/brandsModel")
+const UserModel = require("../models/userModel")
+const ProductModel = require("../models/productModel")
+const BrandModel = require("../models/brandsModel")
 
 class PricesController {
 
@@ -13,10 +13,7 @@ class PricesController {
   //This method returned the brand of the product to me
   async getBrandAndProduct(productName){
     let brand
-    const Products = await initProductsModel()
-    const BrandModel = await initBrandsModel()
-
-    const product = await Products.findOne({ nombre: productName }).lean();
+    const product = await ProductModel.findOne({ nombre: productName }).lean();
 
     if(!product){
       this.throwError("Product not found", 404)
@@ -63,7 +60,6 @@ class PricesController {
       const dataProduct = await this.getBrandAndProduct(productName)
 
       if( dataProduct.dataReturn["brand"] ){
-        console.log("brand" ,dataProduct.dataReturn["brand"])
         productData.brandProduct = dataProduct.dataReturn["brand"]
       }
     }
@@ -93,7 +89,7 @@ class PricesController {
   async getPriceProduct(userId, productName) {
     let productByUser 
     let dataForClient
-    const UserModel = await initUsersModel()
+
     try {
       productByUser = await UserModel.findOne({ _id: userId }).lean()
 
