@@ -1,5 +1,5 @@
-const { Schema } = require("mongoose");
-const { getInstance } = require("../../dbs/setup")
+const mongoose = require("mongoose")
+const { Schema } = mongoose;
 
 const modelSchema = new Schema({
   nombre: String,
@@ -8,13 +8,6 @@ const modelSchema = new Schema({
   enStock: Boolean,
 })
 
-async function initProductsModel(){
-  const mongoose = await getInstance();
-  const model = mongoose.model('products', modelSchema);
+const ProductModel = mongoose.model('products', modelSchema);
 
-  return model
-}
-
-
-
-module.exports = initProductsModel;
+module.exports = ProductModel;

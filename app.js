@@ -1,6 +1,9 @@
-require("./dotenv.js");
+require("./dbs/config/index.js");
 const express = require("express");
 const router = require("./src/routes/index.js");
+const db = require("./dbs/setup.js")
+
+db.initializeConnection()
 
 const PORT = 4000;
 const app = express();

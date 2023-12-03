@@ -11,9 +11,9 @@ async (req, res, next) => {
   const productName = req.params.product_name
 
   try {
-    let priceProduct = await pricesController.getSpecialPrice(userId, productName)
+    let priceProduct = await pricesController.getPriceProduct(userId, productName)
 
-    res.json({ price: priceProduct });
+    res.json( priceProduct );
   } catch (error) {
     next(error);
   }

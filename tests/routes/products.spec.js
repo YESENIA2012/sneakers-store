@@ -1,19 +1,23 @@
-const app = require("../../app.js");
+const { initDbConnectionForTest } = require("../../dbs/setup.js")
 const request = require("supertest");
 const expect = require("chai").expect;
-const mongoose = require('mongoose');
-const ProductController = require("../../src/controllers/productController.js");
-const productController = new ProductController()
-const PricesController = require("../../src/controllers/pricesController.js");
-const pricesController = new PricesController()
 
 describe("Product test", () => {
-  let clientAlice
+  let app, clientAlice, testingController
 
   before(async() => {
+    await initDbConnectionForTest()
+
+    app = require("../../app.js");
+    const TestingController = require("../../src/controllers/testingController.js");
+    testingController = new TestingController()   
+
+    const nikeBrand = await testingController.createBrand("Nike")
+    const idBrand = nikeBrand["_id"].toString()
+
     const firstRecord = {
       nombre: "Nike Air Max 90",
-      id_marca: "649d1816f8253a0a6a5f218e",
+      id_marca: idBrand,
       precioBase: 150.99,
       enStock: true,
     };
@@ -32,9 +36,9 @@ describe("Product test", () => {
       enStock: true,
     }
 
-    await productController.createProductsForTesting(firstRecord)
-    await productController.createProductsForTesting(secondRecord)
-    await productController.createProductsForTesting(thirdRecord)
+    await testingController.createProduct(firstRecord)
+    await testingController.createProduct(secondRecord)
+    await testingController.createProduct(thirdRecord)
 
     const dataAlice = {
       nombre: "Alice Smith", 
@@ -42,14 +46,10 @@ describe("Product test", () => {
       precio_especial_personal: 129.99
     }
 
-    clientAlice = await pricesController.createPricesSpecialsListForTesting(dataAlice)
+    clientAlice = await testingController.createPricesSpecials(dataAlice)
   })
 
-  after(async () => {
-    await mongoose.disconnect();
-  });
-
-  it("GET / Should return 200 and an array containing only the products that are currently in stock", 
+  it("GET /products/ Should return 200 and an array containing only the products that are currently in stock", 
   async () => {
 
     const response = await request(app).get("/products/")
@@ -60,21 +60,24 @@ describe("Product test", () => {
     expect(productsInStock.length).to.deep.equal(2)
   });
 
-  it("GET / Should return 200 and a special price for a client", async () => {
+  it("GET /price/ Should return 200, a special price and product brand", async () => {
     let idClient = clientAlice["_id"].toString()
     let productName = "Nike Air Max 90"
 
     const response = await request(app)
     .get(`/price/${idClient}/${productName}`)
+    console.log("response", response.body)
 
     const priceProduct = response.body
 
     expect(response.status).to.equal(200) ;
-    expect(priceProduct).to.deep.equal({ price: 129.99 })
+    expect(priceProduct).to.deep.equal({ "priceWithDiscount": 129.99, "brandProduct": "Nike" })
   })
 
-  it("GET / Should return 200 and the base price of a product for the client", async () => {
+  it("GET /price/ Should return 200 and the base price of a product for the client", async () => {
+
     let idClient = clientAlice["_id"].toString()
+
     let productName = "SuperJordan"
 
     const response = await request(app)
@@ -83,28 +86,41 @@ describe("Product test", () => {
     const priceProduct = response.body
 
     expect(response.status).to.equal(200) ;
-    expect(priceProduct).to.deep.equal({ price: 100 })
+    expect(priceProduct).to.deep.equal({ priceBase: 100 })
   })
 
-  it("GET / Should return 200 and the base price of a product for the client", async () => {
-    const idClient = clientAlice["_id"].toString()
-    const productName = "SuperJordan"
+  it("GET /price/ Should return 400 and error if user id is invalid", async () => {
+    let idClient = "656bbd987ac3e67878f6aa67"
+    let productName = "SuperJordan"
 
     const response = await request(app)
     .get(`/price/${idClient}/${productName}`)
 
     const priceProduct = response.body
 
-    expect(response.status).to.equal(200) ;
-    expect(priceProduct).to.deep.equal({ price: 100 })
+    expect(response.status).to.equal(400) ;
+    expect(priceProduct).to.deep.equal({ error: "User Id Does Not Exist" })
   })
 
-  it("GET / Should return 200 and the base price when metadata property not exist", async () => {
+  it("GET /price/ Should return 400 and error if user id is invalid", async () => {
+    let idClient = "656bbd987ac3e67878f6aa698"
+    let productName = "SuperJordan"
+
+    const response = await request(app)
+    .get(`/price/${idClient}/${productName}`)
+
+    const priceProduct = response.body
+
+    expect(response.status).to.equal(400) ;
+    expect(priceProduct).to.deep.equal({ error: "Invalid User Id" })
+  })
+
+  it("GET /price/ Should return 200 and the base price when metadata property not exist", async () => {
     const dataHenry = {
       "nombre" : "Henry Wilson"
     }
 
-    let clientHenry = await pricesController.createPricesSpecialsListForTesting(dataHenry)
+    let clientHenry = await testingController.createPricesSpecials(dataHenry)
     let idClient = clientHenry["_id"].toString()
     let productName = "Zapatillas  formales - pumas"
 
@@ -114,10 +130,10 @@ describe("Product test", () => {
     const priceProduct = response.body
 
     expect(response.status).to.equal(200) ;
-    expect(priceProduct).to.deep.equal({ price: 99.98 })
+    expect(priceProduct).to.deep.equal({ priceBase: 99.98 })
   })
 
-  it("GET / Should return 404 and error if product is not found", async () => {
+  it("GET /price/ Should return 404 and error if product is not found", async () => {
     const productName = "New Balance FuelCell Rebel"
     const idClient = clientAlice["_id"].toString()
 

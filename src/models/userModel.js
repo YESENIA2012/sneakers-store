@@ -1,5 +1,5 @@
-const { Schema } = require("mongoose")
-const { getInstance } = require("../../dbs/setup")
+const mongoose = require("mongoose")
+const { Schema } = mongoose
 
 const userSchema = new Schema({
   nombre: String,
@@ -13,11 +13,6 @@ const userSchema = new Schema({
   },
 })
 
-async function initUsersModel(){
-  const mongoose = await getInstance()
-  const model = mongoose.model('users', userSchema)
-  
-  return model
-}
+const UserModel = mongoose.model('users', userSchema)
 
-module.exports = { initUsersModel };
+module.exports = UserModel ;
