@@ -79,8 +79,6 @@ class PricesController {
 
     if(product["precioBase"]){
       productData.priceBase = product.precioBase
-    } else if(product["price"]){
-      productData.priceBase = product.precioBase
     } else if(product["precio_base"]){
       productData.priceBase = product.precio_base
     }
